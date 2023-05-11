@@ -1,0 +1,21 @@
+{
+  "name": "Medium Any Author Stats",
+  "description": "The statistics of any Medium author.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+      "default_popup": "index.html",
+      "default_title": "Open Medium Any Authors Stats"
+  },
+
+  "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+
+  "icons": {
+      "16": "logo192.png",
+      "48": "logo192.png",
+      "128": "logo192.png"
+  }
+}

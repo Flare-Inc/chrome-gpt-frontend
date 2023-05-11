@@ -1,0 +1,11 @@
+.app {
+  width: 320px;
+  @apply text-center;
+  @apply bg-zinc-950;
+  @apply p-2;
+}
+
+.container {
+  @apply p-6;
+  @apply bg-zinc-900 rounded-md;
+}
