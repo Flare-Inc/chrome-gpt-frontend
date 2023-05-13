@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
+import Chat from './Chat';
 
-function App() {
+const App = () => {
   const [pageProcessed, setPageProcessed] = useState<boolean | null>(null);
-  const [userInput, setUserInput] = useState('');
-  const [message, setMessage] = useState('');
 
   const DOMtoString = (selector: any) => {
     if (selector) {
@@ -56,32 +55,6 @@ function App() {
     setPageProcessed(true)
   };
 
-  const completeChatWithInjection = async () => {
-    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    let activeTab = tabs[0];
-    let activeTabId = activeTab.id;
-
-    let embeddings = '[]'
-    if (activeTabId) {
-      embeddings = sessionStorage.getItem(activeTabId.toString()) || '[]';
-    }
-
-    const response = await fetch("http://localhost:5000/complete_chat", {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "user_input": userInput,
-        "embeddings": embeddings,
-      }),
-    });
-
-    const data = await response.json();
-    setMessage(data.message)
-  }
-
   useEffect(() => { processPage() }, []);
 
   return (
@@ -92,17 +65,17 @@ function App() {
       </div>
       <div className="container h-400">
         {pageProcessed ? (
-          <div className="h-full flex flex-col-reverse">
-            <input value={userInput} onChange={(e) => setUserInput(e.target.value)} />
-            <button onClick={() => completeChatWithInjection()}>Send Prompt</button>
-            {message !== '' && (
-              <p>{message}</p>
-            )}
-          </div>
+          <Chat/>
         ) : (
           <div className="h-full flex flex-col items-center justify-center">
-            <FontAwesomeIcon icon={faCircleNotch} spin />
-            <p>Processing Page...</p>
+            {pageProcessed === null ? (
+              <>
+                <FontAwesomeIcon icon={faCircleNotch} spin />
+                <p onClick={() => setPageProcessed(true)}>Processing Page...</p>
+              </>
+            ) : (
+              <p>Error Occurred</p>
+            )}
           </div>
         )}
       </div>

@@ -10,6 +10,9 @@ module.exports = {
       },
       height: {
         '400': '400px'
+      },
+      maxWidth: {
+        '2/3': '67%'
       }
     },
   },

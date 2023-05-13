@@ -6,6 +6,6 @@
 }
 
 .container {
-  @apply p-6;
+  @apply p-0;
   @apply bg-zinc-900 rounded-md;
 }

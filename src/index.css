@@ -16,10 +16,23 @@
   input {
     @apply bg-zinc-600;
     @apply rounded-full;
+    @apply px-2;
   }
 
-  code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
+  button {
+    @apply bg-blue-800;
+  }
+
+  .chat-bubble {
+    @apply rounded-md max-w-2/3 m-2 p-2 text-left;
+  }
+
+  .chat-window::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  .chat-window::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    @apply bg-zinc-800;
   }
 }
