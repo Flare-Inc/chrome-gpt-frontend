@@ -10,30 +10,33 @@ function App() {
 
   const DOMtoString = (selector: any) => {
     if (selector) {
-        selector = document.querySelector(selector);
-        if (!selector) return "ERROR: querySelector failed to find node"
+      selector = document.querySelector(selector);
+      if (!selector) return "ERROR: querySelector failed to find node"
     } else {
-        selector = document.documentElement;
+      selector = document.documentElement;
     }
     return selector.outerHTML;
   };
 
   const processPage = async () => {
-    var message = document.querySelector('#message');
+    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    chrome.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
-        var activeTab = tabs[0];
-        var activeTabId = activeTab.id;
+    let activeTab = tabs[0];
+    let activeTabId = activeTab.id;
 
-        return chrome.scripting.executeScript({
-            target: { tabId: activeTabId as number },
-            func: DOMtoString,
-            args: ['body']
-        });
+    if (activeTabId && sessionStorage.getItem(activeTabId.toString())) {
+      setPageProcessed(true);
+      return;
+    }
 
-    }).then(function (results) {
-      console.log(results[0].result);
-      fetch("http://localhost:5000/process_page", {
+    let results = await chrome.scripting.executeScript({
+      target: { tabId: activeTabId as number },
+      func: DOMtoString,
+      args: ['body']
+    });
+
+    let response = await fetch("http://localhost:5000/process_page",
+      {
         method: "post",
         headers: {
           "Content-Type": "application/json",
@@ -41,43 +44,57 @@ function App() {
         body: JSON.stringify({
           "body": results[0].result
         }),
-      }).then(() => setPageProcessed(true));
-    }).catch(function (error) {
-      console.error('There was an error injecting script : \n' + error.message);
-      setPageProcessed(false);
-    });
+      })
+
+    const embeddings = await response.json();
+    console.log(embeddings)
+
+    if (activeTabId) {
+      sessionStorage.setItem(activeTabId.toString(), JSON.stringify(embeddings));
+    }
+
+    setPageProcessed(true)
   };
 
-  const testFunction = async () => {
+  const completeChatWithInjection = async () => {
+    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    let activeTab = tabs[0];
+    let activeTabId = activeTab.id;
+
+    let embeddings = '[]'
+    if (activeTabId) {
+      embeddings = sessionStorage.getItem(activeTabId.toString()) || '[]';
+    }
+
     const response = await fetch("http://localhost:5000/complete_chat", {
       method: "post",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        "user_input": userInput
+        "user_input": userInput,
+        "embeddings": embeddings,
       }),
     });
 
     const data = await response.json();
-    console.log(data)
-
     setMessage(data.message)
   }
 
-  useEffect(() => {processPage()}, []);
+  useEffect(() => { processPage() }, []);
 
   return (
     <div className="app">
       <div className="flex justify-start items-center mt-2 mb-4 mx-1">
-        <img className="w-8" src="chromelogo.ico"/>
+        <img className="w-8" src="chromelogo.ico" />
         <h1 className="text-left mx-1 align-middle">Chrome-GPT</h1>
       </div>
       <div className="container h-400">
         {pageProcessed ? (
           <div className="h-full flex flex-col-reverse">
             <input value={userInput} onChange={(e) => setUserInput(e.target.value)} />
-            <button onClick={() => testFunction()}>Send Prompt</button>
+            <button onClick={() => completeChatWithInjection()}>Send Prompt</button>
             {message !== '' && (
               <p>{message}</p>
             )}
@@ -85,7 +102,7 @@ function App() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center">
             <FontAwesomeIcon icon={faCircleNotch} spin />
-            <p onClick={() => setPageProcessed(true)}>Processing Page...</p>
+            <p>Processing Page...</p>
           </div>
         )}
       </div>
